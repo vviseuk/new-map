@@ -54,7 +54,7 @@ class OverlayLayerService(
             visible = request.visible ?: true,
             locked = request.locked ?: false,
             opacity = request.opacity ?: 1.0,
-            geometry = request.geometry.toJtsGeometry(),
+            geometry = GeoJsonGeometry.toGeometry(request.geometry),
             styleOverrides = request.styleOverrides
         )
 
@@ -133,7 +133,7 @@ class OverlayLayerService(
         request.visible?.let { layer.visible = it }
         request.locked?.let { layer.locked = it }
         request.opacity?.let { layer.opacity = it }
-        request.geometry?.let { layer.geometry = it.toJtsGeometry() }
+        request.geometry?.let { layer.geometry = GeoJsonGeometry.toGeometry(it) }
         request.styleOverrides?.let { layer.styleOverrides = it }
 
         request.mapAssetId?.let { assetId ->

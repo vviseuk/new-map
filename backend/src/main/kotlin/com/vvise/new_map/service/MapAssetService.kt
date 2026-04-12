@@ -4,8 +4,8 @@ import com.vvise.new_map.dto.*
 import com.vvise.new_map.entity.MapAsset
 import com.vvise.new_map.entity.MapAssetType
 import com.vvise.new_map.repository.AssetCategoryRepository
-import com.vvise.new_map.repository.LayerSegmentRepository
 import com.vvise.new_map.repository.MapAssetRepository
+import com.vvise.new_map.repository.OverlayLayerRepository
 import com.vvise.new_map.repository.TeamRepository
 import com.vvise.new_map.security.AuthenticatedUser
 import org.springframework.stereotype.Service
@@ -16,7 +16,7 @@ import java.util.UUID
 class MapAssetService(
     private val mapAssetRepository: MapAssetRepository,
     private val assetCategoryRepository: AssetCategoryRepository,
-    private val layerSegmentRepository: LayerSegmentRepository,
+    private val overlayLayerRepository: OverlayLayerRepository,
     private val teamRepository: TeamRepository,
     private val teamService: TeamService
 ) {
@@ -127,7 +127,7 @@ class MapAssetService(
             ?: return false
 
         // Check if asset is in use
-        val usages = layerSegmentRepository.findByMapAssetIdAndDeletedFalse(assetId)
+        val usages = overlayLayerRepository.findByMapAssetIdAndDeletedFalse(assetId)
         if (usages.isNotEmpty()) {
             throw IllegalStateException("Asset is in use by ${usages.size} segment(s)")
         }

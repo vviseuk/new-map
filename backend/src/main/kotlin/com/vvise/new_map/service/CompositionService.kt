@@ -15,7 +15,6 @@ class CompositionService(
     private val baseLayerRepository: BaseLayerRepository,
     private val baseSegmentRepository: BaseSegmentRepository,
     private val overlayLayerRepository: OverlayLayerRepository,
-    private val layerSegmentRepository: LayerSegmentRepository,
     private val segmentKeyframeRepository: SegmentKeyframeRepository,
     private val segmentTransitionRepository: SegmentTransitionRepository,
     private val projectRepository: ProjectRepository,
@@ -84,16 +83,12 @@ class CompositionService(
 
         val overlayLayers = overlayLayerRepository.findByCompositionIdAndDeletedFalseOrderByOrder(composition.id!!)
             .map { layer ->
-                val segments = layerSegmentRepository.findByLayerIdAndDeletedFalseOrderByOrder(layer.id!!)
-                    .map { segment ->
-                        val keyframes = segmentKeyframeRepository.findBySegmentIdAndDeletedFalseOrderByTimeOffset(segment.id!!)
-                            .map { SegmentKeyframeDto.from(it) }
-                        val transition = segmentTransitionRepository.findByFromSegmentIdAndDeletedFalse(segment.id!!)
-                            ?.let { SegmentTransitionDto.from(it) }
-                        val mapAssetDto = segment.mapAsset?.let { MapAssetDto.from(it) }
-                        LayerSegmentDto.from(segment, mapAssetDto, keyframes, transition)
-                    }
-                OverlayLayerDto.from(layer, segments)
+                val keyframes = segmentKeyframeRepository.findByLayerIdAndDeletedFalseOrderByTimeOffset(layer.id!!)
+                    .map { LayerKeyframeDto.from(it) }
+                val transition = segmentTransitionRepository.findByFromLayerIdAndDeletedFalse(layer.id!!)
+                    ?.let { LayerTransitionDto.from(it) }
+                val mapAssetDto = layer.mapAsset?.let { MapAssetDto.from(it) }
+                OverlayLayerDto.from(layer, mapAssetDto, keyframes, transition)
             }
 
         return CompositionDto.from(composition, baseLayerDto, overlayLayers)
@@ -148,17 +143,13 @@ class CompositionService(
         }
 
         overlayLayerRepository.findByCompositionIdAndDeletedFalseOrderByOrder(composition.id!!).forEach { layer ->
-            layerSegmentRepository.findByLayerIdAndDeletedFalseOrderByOrder(layer.id!!).forEach { segment ->
-                segmentKeyframeRepository.findBySegmentIdAndDeletedFalseOrderByTimeOffset(segment.id!!).forEach { kf ->
-                    kf.softDelete()
-                    segmentKeyframeRepository.save(kf)
-                }
-                segmentTransitionRepository.findByFromSegmentIdAndDeletedFalse(segment.id!!)?.let { tr ->
-                    tr.softDelete()
-                    segmentTransitionRepository.save(tr)
-                }
-                segment.softDelete()
-                layerSegmentRepository.save(segment)
+            segmentKeyframeRepository.findByLayerIdAndDeletedFalseOrderByTimeOffset(layer.id!!).forEach { kf ->
+                kf.softDelete()
+                segmentKeyframeRepository.save(kf)
+            }
+            segmentTransitionRepository.findByFromLayerIdAndDeletedFalse(layer.id!!)?.let { tr ->
+                tr.softDelete()
+                segmentTransitionRepository.save(tr)
             }
             layer.softDelete()
             overlayLayerRepository.save(layer)
