@@ -42,7 +42,7 @@ export const MapProjectProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
     setIsFullscreen(getFullscreenElement() !== null);
   }, []);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     if (isFullscreen) {
       const requestMethod = getFullScreenCancelMethod();
       if (requestMethod) {
@@ -56,13 +56,17 @@ export const MapProjectProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
         }
       }
     }
-  };
+  }, [isFullscreen]);
 
-  const onControlClick = (id: string) => {
+  const onControlClick = useCallback((id: string) => {
     if (id === 'fullscreen') {
       toggleFullscreen();
     }
-  };
+  }, []);
+
+  const onLayoutReady = useCallback(() => {
+    setIsLayoutReady(true);
+  }, []);
 
   useEffect(() => {
     if (!isEventListenerConnected.current) {
@@ -96,7 +100,7 @@ export const MapProjectProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   }, [currentProject]);
 
   return (
-    <MapProjectContext.Provider value={{ isFullscreen: false, mapElement: { current: null } }}>
+    <MapProjectContext.Provider value={{ isFullscreen: false, mapElement: mapElement, onControlClick, onLayoutReady }}>
       {children}
     </MapProjectContext.Provider>
   );
